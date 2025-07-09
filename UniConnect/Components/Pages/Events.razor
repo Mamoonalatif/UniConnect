@@ -1,0 +1,146 @@
+﻿@page "/events"
+@using UniConnect.Modals
+@using UniConnect.Services
+@inject EventService EventService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="events">
+    <div class="events-banner-wrapper">
+        <img src="/images/thinking.png" class="events-img-left" />
+        <h2 class="events-heading">Events</h2>
+        <img src="/images/camera.png" class="events-img-right" />
+    </div>
+
+    <p class="events-catchy-text">
+        Wanna have fun on the weekend? <br />
+        Explore the exciting events now!
+    </p>
+
+    @if (events == null)
+    {
+        <p class="event-loading-text">Loading...</p>
+    }
+    else if (events.Count == 0)
+    {
+        <p class="event-loading-text">No events found. Be the first to add one!</p>
+    }
+    else
+    {
+        <div class="event-card-grid">
+            @foreach (var evt in events)
+            {
+                <div class="event-card-column">
+                    <div class="event-card">
+                        <img src="@evt.ImageUrl" alt="@evt.Name" class="event-card-img" />
+                        <div class="event-card-body">
+                            <h5 class="event-card-title">@evt.Name</h5>
+                            <p class="event-card-subtitle">@evt.Category</p>
+                            <div class="event-card-footer">
+                                <a class="event-card-button" href="@($"/eventdetails/{evt.Category}/{evt.Id}")">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    <AuthorizeView>
+        <Authorized>
+            <div class="add-event-button-container">
+                <button class="add-event-button" @onclick="ShowAddModal">Add Event</button>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="add-event-button-container">
+                <p class="text-muted">Login to add events.</p>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <!-- Add Event Modal -->
+    @if (showAddModal)
+    {
+        <div class="modal-overlay">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Event</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="HideAddModal"></button>
+                </div>
+                <div class="modal-body">
+                    <InputText class="form-control mb-2" @bind-Value="newEvent.Name" placeholder="Name" />
+                    <InputText class="form-control mb-2" @bind-Value="newEvent.Title" placeholder="Title" />
+                    <InputText class="form-control mb-2" @bind-Value="newEvent.Category" placeholder="Category" />
+                    <InputText class="form-control mb-2" @bind-Value="newEvent.Location" placeholder="Location" />
+                    <InputText class="form-control mb-2" @bind-Value="newEvent.Faculty" placeholder="Faculty" />
+                    <InputDate class="form-control mb-2" @bind-Value="newEvent.Date" />
+                    <InputTextArea class="form-control mb-2" @bind-Value="newEvent.Description" placeholder="Description" />
+                    <InputText class="form-control mb-2" @bind-Value="newEvent.ImageFileName" placeholder="Image File Name (e.g., pic.jpg)" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideAddModal">Cancel</button>
+                    <button class="btn btn-success" @onclick="AddEvent">Save</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Event>? events;
+    private bool showAddModal = false;
+    private Event newEvent = new()
+        {
+            Name = "",
+            Title = "",
+            Description = "",
+            Location = "",
+            Category = "",
+            ImageFileName = "",
+            ImageUrl = "",
+            Faculty = "",
+            Date = DateTime.Now
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetEventsAsync();
+    }
+
+    private void ShowAddModal()
+    {
+        showAddModal = true;
+        StateHasChanged();
+    }
+
+    private void HideAddModal()
+    {
+        showAddModal = false;
+        StateHasChanged();
+    }
+
+    private async Task AddEvent()
+    {
+        newEvent.ImageUrl = $"images/{newEvent.ImageFileName}";
+        await EventService.AddEventAsync(newEvent);
+        events = await EventService.GetEventsAsync(); 
+        ResetForm();
+        showAddModal = false;
+    }
+
+    private void ResetForm()
+    {
+        newEvent = new Event
+            {
+                Name = "",
+                Title = "",
+                Description = "",
+                Location = "",
+                Category = "",
+                ImageFileName = "",
+                ImageUrl = "",
+                Faculty = "",
+                Date = DateTime.Now
+            };
+    }
+}

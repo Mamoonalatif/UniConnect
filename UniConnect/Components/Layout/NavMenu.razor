@@ -1,0 +1,52 @@
+﻿
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavManager
+
+@implements IDisposable
+
+<nav class="navbar navbar-expand-md  bg-transparent custom-sticky-navbar">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div class="navbar-brand page-title d-flex align-items-center">
+            UniConnect
+        </div>
+
+        <div class="collapse navbar-collapse d-flex justify-content-end" id="mainNavbar">
+            <div class="nav-links-container">
+                <NavLink class="nav-link-item" href="/">Home</NavLink>
+                <NavLink class="nav-link-item" href="/events">Events</NavLink>
+                <NavLink class="nav-link-item" href="/lostfound">Lost & Found</NavLink>
+                <AuthorizeView>
+                    <Authorized>
+
+                        <a href="/Account/Logout" class="nav-link-item">Logout</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <NavLink class="nav-link-item" href="Account/Login">Login</NavLink>
+                        <NavLink class="nav-link-item" href="Account/Register">Register</NavLink>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavManager.ToBaseRelativePath(NavManager.Uri);
+        NavManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= OnLocationChanged;
+    }
+}

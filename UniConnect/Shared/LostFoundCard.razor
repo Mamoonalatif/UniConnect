@@ -1,0 +1,20 @@
+﻿@using UniConnect.Modals
+
+@code {
+    [Parameter] public LostFoundItem Item { get; set; } = new();
+}
+
+<div class="card lost-card bg-dark shadow-lg border-0 rounded-6  text-black">
+    <img src="@Item.ImageUrl"
+         class="card-img-top rounded-top"
+         alt="@Item.Title"
+         style="height: 250px; width: 100%; object-fit: cover;" />
+
+    <div class="card-body col-gray p-4">
+        <h4 class="card-title fw-bold text-white">@Item.Title</h4>
+        <p class="text-muted small">
+            <em>Posted: @Item.PostedAt.ToString("g")</em>
+        </p>
+        <a class="btn btn-custom-dark rounded-pill mt-2 px-4" href="/itemdetails/@Item.Id">Details</a>
+    </div>
+</div>

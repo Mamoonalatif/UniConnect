@@ -1,0 +1,67 @@
+﻿@page "/itemdetails/{ItemId:int}"
+@using UniConnect.Modals
+@using UniConnect.Services
+@inject LostFoundService LostService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<div class="lostfounditems-detail">
+    @if (Item == null)
+    {
+        <div class="text-center text-light py-5">
+            <h2 class="display-6">Item Not Found</h2>
+            <a href="/lostfound" class="btn btn-custom-dark mt-3">Go Back</a>
+        </div>
+    }
+    else
+    {
+        <div class="container-fluid px-0">
+            <div class="bg-dark text-white py-5 text-center shadow-sm mb-4 w-50">
+                <h1 class="display-4 fw-bold">@Item.Title</h1>
+                <p class="lead">@Item.Description</p>
+            </div>
+
+            <div class="container mb-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="rounded-4 p-4 bg-black border border-secondary shadow-lg d-flex flex-column flex-md-row gap-4 align-items-center">
+                            <div class="flex-shrink-0 text-center">
+                                <img src="@Item.ImageUrl"
+                                alt="@Item.Title"
+                                class="img-fluid rounded-3 shadow"
+                                style="max-width: 400px; max-height: 400px; object-fit: cover;" />
+                            </div>
+
+                            <div class="text-white flex-grow-1">
+                                <h3 class="fw-bold mb-3">@Item.Title</h3>
+
+                                <p class="mb-2"><strong>📦 Type:</strong> @Item.Type</p>
+                                <p class="mb-2"><strong>📅 Date @(Item.Type):</strong> @Item.Date.ToString("D")</p>
+                                <p class="mb-2"><strong>📍 Location:</strong> @Item.Location</p>
+                                <p class="mb-2 text-muted"><small><strong>Posted On:</strong> @Item.PostedAt.ToString("f")</small></p>
+
+                                <button class="btn btn-custom-dark rounded-pill mt-3 px-4" @onclick="GoBack">Go Back</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int ItemId { get; set; }
+    private LostFoundItem? Item;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Item = await LostService.GetByIdAsync(ItemId);
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/", forceLoad: true);
+        StateHasChanged();
+    }
+}

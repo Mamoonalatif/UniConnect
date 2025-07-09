@@ -1,0 +1,29 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="chat-popup" id="chatPopup">
+    <div class="chat-container">
+        <div class="chat-header">
+            Chat AI Bot
+            <button class="close-btn" onclick="hideChat()">✖</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Your message here ..." class="botuserinput" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<button class="chat-toggle-btn" onclick="toggleChat()">💬UniBot </button>
+<link href="app.css" rel=" stylesheet" />
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeChatBot");
+        }
+    }
+}
+

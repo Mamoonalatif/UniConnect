@@ -1,0 +1,165 @@
+﻿@page "/lostfound"
+@using UniConnect.Modals
+@using UniConnect.Services
+@inject LostFoundService LostService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+@implements IDisposable
+
+<div class="lostfound-page-wrapper">
+    <div class="lostfound-page-header-container">
+        <div class="lostfound-side-illustration left d-none d-lg-block">
+            <img src="images/ill2.png" alt="Decorative graphic" />
+        </div>
+
+        <div class="lostfound-header-content">
+            <h1 class="lostfoundpage-title">Lost & Found</h1>
+            <p class="lostfoundpage-subtitle">Find what you've lost. Return what you've found.</p>
+            <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                <div class="lostfoundfilter-wrapper">
+                    <button class="btn-filter @(FilterType == "Lost" ? "active" : "")" @onclick="SetLost">Lost</button>
+                    <button class="btn-filter @(FilterType == "Found" ? "active" : "")" @onclick="SetFound">Found</button>
+                </div>
+                <button class="btn-post-item" @onclick="ToggleForm">
+                    <i class="bi bi-plus-circle"></i> Post Item
+                </button>
+            </div>
+        </div>
+
+        <div class="lostfound-side-illustration right d-none d-lg-block">
+            <img src="images/ill1.png" alt="Decorative graphic" />
+        </div>
+    </div>
+
+    <div class="container">
+        @if (ShowForm)
+        {
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="mb-5 add-item-card">
+                        <EditForm Model="NewItem" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            <div class="mb-3">
+                                <InputText class="form-control" @bind-Value="NewItem.Title" placeholder="Title" />
+                                <ValidationMessage For="@(() => NewItem.Title)" />
+                            </div>
+                            <div class="mb-3">
+                                <InputTextArea class="form-control" @bind-Value="NewItem.Description" placeholder="Description" />
+                                <ValidationMessage For="@(() => NewItem.Description)" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="itemDate" class="form-label">Date Lost/Found</label>
+                                <InputDate id="itemDate" class="form-control" @bind-Value="NewItem.Date" max="@todayDateString" />
+                                <ValidationMessage For="@(() => NewItem.Date)" />
+                            </div>
+                            <div class="mb-3">
+                                <InputText class="form-control" @bind-Value="NewItem.Location" placeholder="Location" />
+                                <ValidationMessage For="@(() => NewItem.Location)" />
+                            </div>
+                            <div class="mb-3">
+                                <InputSelect class="form-control" @bind-Value="NewItem.Type">
+                                    <option value="">Select Type</option>
+                                    <option value="Lost">Lost</option>
+                                    <option value="Found">Found</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => NewItem.Type)" />
+                            </div>
+                            <div class="mb-3">
+                                <InputText class="form-control" @bind-Value="NewItem.ImageUrl" placeholder="Image URL (Optional)" />
+                            </div>
+                            <button type="submit" class="btn-custom-dark w-100">Submit Item</button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="lostfound-grid">
+            @if (FilteredItems != null)
+            {
+                @foreach (var item in FilteredItems)
+                {
+                    <div class="lostfound-grid-item">
+                        <div class="lostfound-card-wrapper">
+                            <LostFoundCard Item="item" />
+                            <button class="btn btn-danger mt-2 w-100"
+                                    @onclick="@(() => ConfirmDelete(item.Id, item.Title))">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted">Loading items...</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string FilterType = "Lost";
+    private bool ShowForm = false;
+    private LostFoundItem NewItem = new();
+    private string todayDateString = DateTime.Today.ToString("yyyy-MM-dd");
+    private List<LostFoundItem> FilteredItems = new();
+
+    private async Task LoadItems()
+    {
+        FilteredItems = await LostService.GetByTypeAsync(FilterType);
+        StateHasChanged();
+    }
+
+    private async Task SetLost()
+    {
+        FilterType = "Lost";
+        await LoadItems();
+    }
+
+    private async Task SetFound()
+    {
+        FilterType = "Found";
+        await LoadItems();
+    }
+
+    private void ToggleForm()
+    {
+        ShowForm = !ShowForm;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        NewItem.PostedAt = DateTime.Now;
+        await LostService.AddItemAsync(NewItem);
+        NewItem = new() { Date = DateTime.Today };
+        ShowForm = false;
+        await LoadItems();
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        await LostService.DeleteItemAsync(id);
+        await LoadItems();
+    }
+
+    private async Task ConfirmDelete(int id, string title)
+    {
+        bool confirm = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{title}'?");
+        if (confirm)
+        {
+            await DeleteItem(id);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        LostService.OnChange += StateHasChanged;
+        await LoadItems();
+    }
+
+    public void Dispose()
+    {
+        LostService.OnChange -= StateHasChanged;
+    }
+}

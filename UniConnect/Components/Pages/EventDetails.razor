@@ -1,0 +1,55 @@
+﻿@page "/eventdetails/{category}/{id:int}"
+@using UniConnect.Modals
+@using UniConnect.Services
+@inject EventService EventService
+@rendermode InteractiveServer
+
+<div class="eventdetails">
+
+    <h1 class="page-title centered-heading">Event Details</h1>
+
+
+    @if (eventItem != null)
+    {
+        <div class="eventdetails-wrapper">
+            <img src="images/boy.png" class="floating-boy-image" />
+
+            <div class="eventdetails-container">
+                <img src="@eventItem.ImageUrl" class="eventdetails-image" alt="@eventItem.Name" />
+                <div class="eventdetails-content">
+                    <h2>@eventItem.Name</h2>
+                    <p>@eventItem.Description</p>
+                    <ul>
+                        <li><strong>Category:</strong> @eventItem.Category</li>
+                        <li><strong>Location:</strong> @eventItem.Location</li>
+                        <li><strong>Date:</strong> @eventItem.Date.ToString("MMMM dd, yyyy")</li>
+                        <li><strong>Faculty:</strong> @eventItem.Faculty</li>
+                    </ul>
+                </div>
+            </div>
+
+            <img src="images/girl.png" class="floating-girl-image" />
+        </div>
+    }
+
+
+
+
+    else
+    {
+        <p class="text-danger text-center">Event not found.</p>
+    }
+
+</div>
+@code {
+    [Parameter] public string category { get; set; } = string.Empty;
+    [Parameter] public int id { get; set; }
+
+    private Event? eventItem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"Fetching event with ID: {id} and Category: {category}");
+        eventItem = await EventService.GetEventByIdAndCategoryAsync(id, category);
+    }
+}

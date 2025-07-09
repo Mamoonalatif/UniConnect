@@ -1,0 +1,298 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@using UniConnect.Services
+@using UniConnect.Modals
+@inject TestimonialService TestimonialService
+@inject LostFoundService LostFoundService
+@inject EventService EventService
+@inject IJSRuntime JS
+
+<div class="@((showModal ? "main-container blurred" : "main-container"))">
+
+    <!-- Hero Section with Image Carousel -->
+    <div class="hero-section">
+        <div class="carousel-tagline">
+            <h1>Stay Connected. Stay Informed. Stay Reunited.</h1>
+        </div>
+
+        <div class="carousel-wrapper">
+            @if (carouselEvents.Any())
+            {
+                @foreach (var evt in carouselEvents.Select((e, i) => new { e, i }))
+                {
+                    <img src="@evt.e.ImageUrl"
+                         alt="@evt.e.Title"
+                         class="carousel-image @(currentImageIndex == evt.i ? "active" : "")" />
+                }
+
+                <div class="carousel-caption">
+                    <h2>@carouselEvents[currentImageIndex].Title</h2>
+                </div>
+
+                <button class="carousel-arrow left" @onclick="PrevImage">&#10094;</button>
+                <button class="carousel-arrow right" @onclick="NextImage">&#10095;</button>
+            }
+        </div>
+    </div>
+
+    <!-- Event Search Section -->
+    <div class="event-search-section">
+        <h2 class="section-heading">Find Exciting Events</h2>
+        <div class="event-search-bar">
+            <input type="text" placeholder="Search upcoming events..." @bind="searchTerm" @bind:event="oninput" id="searchInput" />
+            <button type="button" class="mic-button @(isListening ? "listening" : "")" @onclick="StartVoiceRecognition">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            <div class="event-search-results">
+                @foreach (var evt in FilteredEvents)
+                {
+                    <div class="event-card">
+                        <h4>@evt.Title</h4>
+                        <p>@evt.Description</p>
+                    </div>
+                }
+
+                @if (FilteredEvents.Count == 0)
+                {
+                    <p class="no-results">No events found for "<strong>@searchTerm</strong>"</p>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- About Us Section -->
+    <div class="about-us-section">
+        <div class="about-us-content">
+            <div class="about-us-image">
+                <img src="/images/aboutus.png" alt="About Us Image" class="about-us-circle" />
+            </div>
+            <div class="about-us-text">
+                <h2>About UniConnect</h2>
+                <p>
+                    UniConnect is a smart community-driven platform designed to streamline university communication, event updates, and student engagement. From lost and found to event highlights and everything in between, we connect students in real-time.
+                </p>
+            </div>
+        </div>
+    </div>
+
+   <!-- Lost and Found Section -->
+<div class="lost-found-section">
+    <h2 class="lostandfound-heading">Lost & Found</h2>
+    <div class="lostandfound-wrapper">
+        <div class="lostfound-list">
+            @foreach (var item in lostFoundItems) 
+            {
+                <div class="lostfound-item">
+                    <strong>@item.Title:</strong> @item.Description – @item.Location
+                </div>
+            }
+        </div>
+        <div class="lostfound-image">
+            <img src="images/center.png" alt="Lost and Found Image">
+        </div>
+    </div>
+</div>
+
+
+
+
+    <!-- Testimonials Section -->
+    <div class="testimonial-section">
+        <h2 class="section-heading">What Our Students Say</h2>
+        <div class="testimonial-scroll-wrapper">
+            
+            @foreach (var t in testimonials)
+            {
+                <div class="testimonial-card">
+                    <img src="@t.Logo" class="testimonial-logo" alt="logo" />
+                    <p class="testimonial-text">"@t.Text"</p>
+                    <h4 class="testimonial-author">@t.Author - @t.Role</h4>
+                </div>
+            }
+        </div>
+     
+        <div class="share-story-container">
+            <button class="share-story-button" @onclick="OpenModal">Share Your Story</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="/events">Events</a></li>
+                    <li><a href="/lostfound">Lost & Found</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; @DateTime.Now.Year UniConnect. All rights reserved.</p>
+        </div>
+    </footer>
+</div>
+
+<!-- Testimonial Modal -->
+@if (showModal)
+{
+    <div class="story-modal-overlay">
+        <div class="story-modal-content">
+            <h3>Submit Your Story</h3>
+            <div class="story-modal-form">
+                <input type="text" placeholder="Your Name" @bind="newAuthor" />
+                <input type="text" placeholder="Your Role (e.g. CS Student)" @bind="newRole" />
+                <textarea placeholder="Your Story" @bind="newText"></textarea>
+                <div class="story-modal-buttons">
+                    <button class="story-modal-button" @onclick="SubmitTestimonial">Submit</button>
+                    <button class="story-modal-button" @onclick="CloseModal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Chatbot Component -->
+<Chatbot />
+
+@code {
+    // Data
+    private List<Event> allEvents = new();
+    private List<Event> carouselEvents = new();
+    private List<LostFoundItem> lostFoundItems = new();
+    private List<Testimonial> testimonials = new();
+
+    // Carousel
+    private int currentImageIndex = 0;
+    private System.Timers.Timer? carouselTimer;
+
+    private void PrevImage() =>
+        currentImageIndex = (currentImageIndex - 1 + carouselEvents.Count) % carouselEvents.Count;
+
+    private void NextImage() =>
+        currentImageIndex = (currentImageIndex + 1) % carouselEvents.Count;
+
+    // Search
+    private string searchTerm = "";
+    private List<Event> FilteredEvents =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? new()
+            : allEvents.Where(e =>
+                e.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    // Testimonials
+    private string newAuthor = "";
+    private string newRole = "";
+    private string newText = "";
+    private bool showModal = false;
+
+    void OpenModal() => showModal = true;
+
+    void CloseModal()
+    {
+        showModal = false;
+        newAuthor = "";
+        newRole = "";
+        newText = "";
+    }
+
+    async Task SubmitTestimonial()
+    {
+        if (!string.IsNullOrWhiteSpace(newAuthor) &&
+            !string.IsNullOrWhiteSpace(newRole) &&
+            !string.IsNullOrWhiteSpace(newText))
+        {
+            var testimonial = new Testimonial
+                {
+                    Author = newAuthor,
+                    Role = newRole,
+                    Text = newText,
+                    Logo = "/images/person.png"
+                };
+
+            await TestimonialService.AddTestimonialAsync(testimonial);
+            testimonials = await TestimonialService.GetTestimonialsAsync();
+            CloseModal();
+        }
+    }
+
+    // Voice Recognition
+    private DotNetObjectReference<Index>? objRef;
+    private bool isListening = false;
+
+    private async Task StartVoiceRecognition()
+    {
+        isListening = true;
+        objRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("voiceSearch.startRecognition", objRef);
+    }
+    [JSInvokable]
+    public async Task SetSearchTerm(string recognizedText)
+    {
+        // Normalize text: remove punctuation and trim spaces
+        searchTerm = new string(recognizedText
+                                .Where(c => !char.IsPunctuation(c) || c == '\'')
+                                .ToArray())
+                                .Trim();
+
+        // Update visible input field in browser and trigger re-bind
+        await JS.InvokeVoidAsync("setInputValue", "searchInput", searchTerm);
+
+        isListening = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnRecognitionEnded()
+    {
+        isListening = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // On Load
+    protected override async Task OnInitializedAsync()
+    {
+        allEvents = await EventService.GetEventsAsync();
+        carouselEvents = allEvents.Take(5).ToList(); 
+
+        testimonials = await TestimonialService.GetTestimonialsAsync();
+
+        var lostItems = await LostFoundService.GetByTypeAsync("Lost");
+        var foundItems = await LostFoundService.GetByTypeAsync("Found");
+        lostFoundItems = lostItems.Concat(foundItems)
+            .OrderByDescending(i => i.PostedAt)
+            .Take(6)
+            .ToList();
+
+        carouselTimer = new System.Timers.Timer(3000);
+        carouselTimer.Elapsed += async (s, e) =>
+        {
+            await InvokeAsync(() =>
+            {
+                NextImage();
+                StateHasChanged();
+            });
+        };
+        carouselTimer.Start();
+    }
+
+    public void Dispose()
+    {
+        carouselTimer?.Stop();
+        carouselTimer?.Dispose();
+    }
+}
