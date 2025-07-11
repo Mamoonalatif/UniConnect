@@ -86,20 +86,16 @@
 ### 🏠 Homepage with Event Carousel
 ![Homepage](https://github.com/user-attachments/assets/f4550389-1234-4ed1-974c-1fbc45496626)
 
-### 🎉 Events Management
-![Events](https://github.com/user-attachments/assets/f6cb1fa1-7700-4fd2-939f-ac78ce830d94)
-
-### 🔍 Lost & Found System
-![Lost & Found](https://github.com/user-attachments/assets/157b8310-fb43-4dc7-98a3-0ab3666655f6)
-
-### 🤖 AI Chatbot Interface
-![Chatbot](https://github.com/user-attachments/assets/caaf157f-ac8a-4dd5-bfa1-2cb53591cbc4)
-
-### 💭 Student Testimonials
-![Testimonials](https://github.com/user-attachments/assets/4d71a2b9-9f92-43f1-a60c-a2be95209ab8)
-
 ### 🔐 Authentication System
-![Auth](https://github.com/user-attachments/assets/528cbff3-e653-4e26-b311-1bc4d94ef4be)
+![Auth](https://github.com/user-attachments/assets/f6cb1fa1-7700-4fd2-939f-ac78ce830d94)
+![Auth](https://github.com/user-attachments/assets/157b8310-fb43-4dc7-98a3-0ab3666655f6)
+### 💭 Student Testimonials
+### 🤖 AI Chatbot Interface
+### 🎉 Events Management
+![Events](https://github.com/user-attachments/assets/caaf157f-ac8a-4dd5-bfa1-2cb53591cbc4)
+![Events](https://github.com/user-attachments/assets/4d71a2b9-9f92-43f1-a60c-a2be95209ab8)
+### 🔍 Lost & Found System
+![Lost&Found](https://github.com/user-attachments/assets/528cbff3-e653-4e26-b311-1bc4d94ef4be)
 
 </div>
 
