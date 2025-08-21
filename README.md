@@ -173,20 +173,14 @@ UniConnect/
    ```bash
    dotnet restore
    dotnet ef database update
-   ```
+   `
 
-4. **Configure AI Chatbot (Optional)**
-   ```javascript
-   // Update chatbot.js with your Google Gemini API key
-   const API_KEY = "your-gemini-api-key-here";
-   ```
-
-5. **Run the application**
+4. **Run the application**
    ```bash
    dotnet run --project UniConnect/UniConnect.csproj
    ```
 
-6. **Access the application**
+5. **Access the application**
    ```
    🌐 Local: https://localhost:5001
    🌍 Network: Use the URL shown in your terminal
